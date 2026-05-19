@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  name                  String?
+  googleAccessToken     String?
+  googleRefreshToken    String?
+  googleTokenExpiry     DateTime?
+  notionAccessToken     String?
+  notionWorkspaceId     String?
+  notionDatabaseId      String?
+  createdAt             DateTime  @default(now())
+  meetings              Meeting[]
+  webhookChannels       CalendarWebhookChannel[]
+}
+
+model Meeting {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id])
+  googleEventId     String?       @unique
+  title             String
+  startTime         DateTime
+  endTime           DateTime?
+  durationMinutes   Int?
+  attendees         Json
+  meetingLink       String?
+  recordingUrl      String?
+  uploadedFilePath  String?
+  transcriptRaw     String?
+  transcriptJson    Json?
+  analysis          Json?
+  summaryText       String?
+  summaryDocUrl     String?
+  status            MeetingStatus @default(PENDING)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  pipelineRun       PipelineRun?
+  tasks             Task[]
+  emails            Email[]
+}
+
+enum MeetingStatus {
+  PENDING
+  TRANSCRIBING
+  ANALYZING
+  CREATING_TASKS
+  SENDING_COMMS
+  ARCHIVING
+  DONE
+  FAILED
+}
+
+model PipelineRun {
+  id          String         @id @default(cuid())
+  meetingId   String         @unique
+  meeting     Meeting        @relation(fields: [meetingId], references: [id])
+  startedAt   DateTime       @default(now())
+  completedAt DateTime?
+  totalMs     Int?
+  steps       PipelineStep[]
+  errorLog    Json?
+  status      PipelineStatus @default(RUNNING)
+}
+
+enum PipelineStatus {
+  RUNNING
+  DONE
+  FAILED
+  PARTIAL
+}
+
+model PipelineStep {
+  id            String      @id @default(cuid())
+  pipelineRunId String
+  pipelineRun   PipelineRun @relation(fields: [pipelineRunId], references: [id])
+  agentName     String
+  status        StepStatus  @default(PENDING)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  durationMs    Int?
+  input         Json?
+  output        Json?
+  errorMessage  String?
+  retryCount    Int         @default(0)
+}
+
+enum StepStatus {
+  PENDING
+  RUNNING
+  DONE
+  FAILED
+  RETRYING
+}
+
+model Task {
+  id            String   @id @default(cuid())
+  meetingId     String
+  meeting       Meeting  @relation(fields: [meetingId], references: [id])
+  title         String
+  description   String?
+  ownerEmail    String?
+  ownerName     String?
+  deadline      DateTime?
+  priority      String?
+  notionPageId  String?
+  notionUrl     String?
+  createdAt     DateTime @default(now())
+}
+
+model Email {
+  id             String      @id @default(cuid())
+  meetingId      String
+  meeting        Meeting     @relation(fields: [meetingId], references: [id])
+  toEmail        String
+  toName         String?
+  subject        String
+  bodyText       String
+  bodyHtml       String?
+  gmailMessageId String?
+  sentAt         DateTime?
+  status         EmailStatus @default(DRAFT)
+  createdAt      DateTime    @default(now())
+}
+
+enum EmailStatus {
+  DRAFT
+  SENT
+  FAILED
+}
+
+model CalendarWebhookChannel {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  channelId   String   @unique
+  resourceId  String
+  expiry      DateTime
+  createdAt   DateTime @default(now())
+}

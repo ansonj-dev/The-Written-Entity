@@ -1,0 +1,110 @@
+# Environment Variables & Credentials
+.env
+.env.local
+.env.*.local
+*.env
+.env.example
+
+# API Keys & Secrets
+**/credentials.json
+**/token.json
+**/*secret*
+**/*key*.json
+**/*credentials*
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+*.err.log
+*.out.log
+backend-local.log
+backend-local.err.log
+frontend-local.log
+frontend-local.err.log
+server-smoke.err.log
+server-smoke.out.log
+
+# Process IDs
+*.pid
+backend-local.pid
+frontend-local.pid
+
+# Uploaded files (user data)
+uploads/
+**/uploads/*
+!uploads/.gitkeep
+
+# Archives (generated meeting summaries)
+archives/
+**/archives/*
+!archives/.gitkeep
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+prisma/dev.db
+prisma/migrations/
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# Testing
+coverage/
+.nyc_output/
+*.lcov
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.cache
+
+# Package manager
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Redis dump
+dump.rdb
+
+# Docker
+docker-compose.override.yml
+
+# Backup files
+*.backup
+*.old

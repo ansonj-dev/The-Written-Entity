@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Written Entity</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #05050A;
+    --surface: #0D0D18;
+    --surface2: #121220;
+    --surface3: #1A1A2E;
+    --border: rgba(255,255,255,0.06);
+    --border2: rgba(255,255,255,0.12);
+    --red: #E94560;
+    --red-dim: rgba(233,69,96,0.15);
+    --red-glow: rgba(233,69,96,0.08);
+    --blue: #4F8EF7;
+    --blue-dim: rgba(79,142,247,0.12);
+    --green: #22C55E;
+    --green-dim: rgba(34,197,94,0.12);
+    --amber: #F59E0B;
+    --amber-dim: rgba(245,158,11,0.12);
+    --purple: #A78BFA;
+    --purple-dim: rgba(167,139,250,0.12);
+    --text: #F0F0F8;
+    --text2: rgba(240,240,248,0.55);
+    --text3: rgba(240,240,248,0.3);
+    --mono: 'DM Mono', monospace;
+    --display: 'Syne', sans-serif;
+    --body: 'Instrument Sans', sans-serif;
+  }
+
+  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--body); overflow: hidden; }
+
+  .app { display: grid; grid-template-columns: 220px 1fr 300px; grid-template-rows: 56px 1fr; height: 100vh; }
+
+  /* TOPBAR */
+  .topbar {
+    grid-column: 1 / -1;
+    display: flex; align-items: center; gap: 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    padding: 0 20px;
+    position: relative;
+    z-index: 10;
+  }
+  .logo {
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    text-transform: uppercase;
+    margin-right: 32px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .logo-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--red);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+  .topbar-nav { display: flex; gap: 2px; flex: 1; }
+  .topbar-nav a {
+    font-size: 12px; font-weight: 500; letter-spacing: 0.04em;
+    color: var(--text2); text-decoration: none;
+    padding: 6px 12px; border-radius: 6px;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+  .topbar-nav a:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  .topbar-nav a.active { color: var(--text); }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .status-pill {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 500; font-family: var(--mono);
+    color: var(--green); background: var(--green-dim);
+    padding: 4px 10px; border-radius: 100px;
+    border: 1px solid rgba(34,197,94,0.2);
+  }
+  .status-pill::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--green); animation: pulse 2s ease-in-out infinite;
+  }
+  .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--red), var(--purple));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: white;
+    cursor: pointer;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    display: flex; flex-direction: column;
+    padding: 20px 12px;
+    overflow-y: auto;
+  }
+  .sidebar-section { margin-bottom: 24px; }
+  .sidebar-label {
+    font-size: 9px; font-weight: 600; letter-spacing: 0.12em;
+    color: var(--text3); text-transform: uppercase;
+    padding: 0 8px; margin-bottom: 6px;
+  }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12.5px; font-weight: 500; color: var(--text2);
+    padding: 7px 10px; border-radius: 7px;
+    cursor: pointer; transition: all 0.15s;
+    text-decoration: none;
+  }
+  .sidebar-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+  .sidebar-item.active { background: var(--red-dim); color: var(--red); }
+  .sidebar-item svg { width: 15px; height: 15px; opacity: 0.7; flex-shrink: 0; }
+  .sidebar-item.active svg { opacity: 1; }
+  .badge {
+    margin-left: auto; font-size: 10px; font-weight: 600;
+    font-family: var(--mono); min-width: 18px; height: 18px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 5px; padding: 0 4px;
+  }
+  .badge-red { background: var(--red-dim); color: var(--red); }
+  .badge-blue { background: var(--blue-dim); color: var(--blue); }
+
+  .integration-list { display: flex; flex-direction: column; gap: 4px; }
+  .integration-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11.5px; color: var(--text2); padding: 5px 8px;
+    border-radius: 6px;
+  }
+  .int-icon {
+    width: 20px; height: 20px; border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+  .int-dot { width: 5px; height: 5px; border-radius: 50%; margin-left: auto; }
+  .connected { background: var(--green); }
+  .disconnected { background: var(--text3); }
+
+  /* MAIN */
+  .main {
+    overflow-y: auto; padding: 24px;
+    display: flex; flex-direction: column; gap: 20px;
+    background: var(--bg);
+  }
+
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .section-title {
+    font-family: var(--display); font-size: 12px;
+    font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text2);
+  }
+
+  /* METRIC CARDS */
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .metric-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px;
+    position: relative; overflow: hidden;
+  }
+  .metric-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .metric-card.red::before { background: var(--red); }
+  .metric-card.blue::before { background: var(--blue); }
+  .metric-card.green::before { background: var(--green); }
+  .metric-card.purple::before { background: var(--purple); }
+  .metric-label { font-size: 10px; font-weight: 500; letter-spacing: 0.06em; color: var(--text3); text-transform: uppercase; margin-bottom: 8px; }
+  .metric-value { font-family: var(--mono); font-size: 28px; font-weight: 400; color: var(--text); line-height: 1; margin-bottom: 6px; }
+  .metric-sub { font-size: 11px; color: var(--text2); }
+  .metric-change { font-family: var(--mono); font-size: 10px; margin-top: 8px; }
+  .up { color: var(--green); }
+  .down { color: var(--red); }
+
+  /* PIPELINE PANEL */
+  .pipeline-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+  }
+  .pipeline-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+  }
+  .pipeline-title { font-family: var(--display); font-size: 13px; font-weight: 700; }
+  .pipeline-meta { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-left: auto; }
+
+  .pipeline-steps { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+
+  .step {
+    display: grid; grid-template-columns: 36px 1fr auto;
+    align-items: center; gap: 12px;
+    padding: 12px 14px; border-radius: 8px;
+    border: 1px solid var(--border);
+    transition: all 0.3s;
+    cursor: default;
+  }
+  .step.done { border-color: rgba(34,197,94,0.2); background: rgba(34,197,94,0.03); }
+  .step.running { border-color: rgba(79,142,247,0.3); background: rgba(79,142,247,0.05); animation: runningPulse 2s ease-in-out infinite; }
+  .step.pending { border-color: var(--border); opacity: 0.5; }
+  .step.failed { border-color: rgba(233,69,96,0.3); background: rgba(233,69,96,0.05); }
+
+  @keyframes runningPulse {
+    0%, 100% { border-color: rgba(79,142,247,0.3); }
+    50% { border-color: rgba(79,142,247,0.6); }
+  }
+
+  .step-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .step.done .step-icon { background: var(--green-dim); }
+  .step.running .step-icon { background: var(--blue-dim); }
+  .step.pending .step-icon { background: rgba(255,255,255,0.04); }
+  .step.failed .step-icon { background: var(--red-dim); }
+
+  .step-name { font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .step-desc { font-size: 11px; color: var(--text2); font-family: var(--mono); }
+  .step-time { font-family: var(--mono); font-size: 10px; }
+  .step.done .step-time { color: var(--green); }
+  .step.running .step-time { color: var(--blue); }
+  .step.pending .step-time { color: var(--text3); }
+
+  .spinner {
+    width: 18px; height: 18px; border: 2px solid rgba(79,142,247,0.2);
+    border-top-color: var(--blue); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* RECENT MEETINGS */
+  .meetings-list { display: flex; flex-direction: column; gap: 8px; }
+  .meeting-row {
+    display: grid; grid-template-columns: 1fr auto auto;
+    align-items: center; gap: 16px;
+    padding: 12px 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .meeting-row:hover { border-color: var(--border2); background: var(--surface2); }
+  .meeting-row.active { border-color: rgba(233,69,96,0.3); }
+  .meeting-title { font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .meeting-meta { font-size: 11px; color: var(--text2); font-family: var(--mono); }
+  .meeting-tag {
+    font-size: 10px; font-weight: 500; padding: 3px 8px;
+    border-radius: 4px; font-family: var(--mono); white-space: nowrap;
+  }
+  .tag-done { background: var(--green-dim); color: var(--green); }
+  .tag-running { background: var(--blue-dim); color: var(--blue); }
+  .tag-pending { background: rgba(255,255,255,0.06); color: var(--text3); }
+  .meeting-count { font-size: 11px; color: var(--text2); font-family: var(--mono); }
+
+  /* OUTPUT PANEL */
+  .right-panel {
+    border-left: 1px solid var(--border);
+    background: var(--surface);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .panel-tabs {
+    display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  .panel-tab {
+    flex: 1; padding: 10px 0; font-size: 11px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    text-align: center; cursor: pointer;
+    color: var(--text3); border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .panel-tab.active { color: var(--red); border-bottom-color: var(--red); }
+  .panel-content { flex: 1; overflow-y: auto; padding: 16px; }
+
+  .output-block {
+    margin-bottom: 16px; border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden;
+  }
+  .output-block-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .output-block-title { font-size: 11px; font-weight: 600; color: var(--text2); flex: 1; }
+  .output-block-body { padding: 12px; font-size: 11.5px; color: var(--text2); font-family: var(--mono); line-height: 1.7; }
+
+  .action-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 7px 0; border-bottom: 1px solid var(--border);
+    font-size: 11px;
+  }
+  .action-item:last-child { border-bottom: none; }
+  .action-check {
+    width: 14px; height: 14px; border-radius: 3px;
+    background: var(--green-dim); border: 1px solid rgba(34,197,94,0.3);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+  }
+  .action-text { color: var(--text2); flex: 1; }
+  .action-owner {
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    background: rgba(255,255,255,0.05); padding: 1px 5px; border-radius: 3px;
+    white-space: nowrap; margin-top: 1px;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11.5px; font-weight: 600; letter-spacing: 0.04em;
+    padding: 7px 14px; border-radius: 7px; cursor: pointer;
+    border: none; transition: all 0.15s; font-family: var(--body);
+  }
+  .btn-primary { background: var(--red); color: white; }
+  .btn-primary:hover { background: #d63651; transform: translateY(-1px); }
+  .btn-ghost { background: rgba(255,255,255,0.06); color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+
+  /* UPLOAD ZONE */
+  .upload-zone {
+    border: 1.5px dashed var(--border2); border-radius: 10px;
+    padding: 24px; text-align: center; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .upload-zone:hover { border-color: var(--red); background: var(--red-glow); }
+  .upload-icon { font-size: 28px; margin-bottom: 10px; }
+  .upload-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .upload-sub { font-size: 11px; color: var(--text2); }
+
+  /* AGENT STATUS */
+  .agent-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+  }
+  .agent-row:last-child { border-bottom: none; }
+  .agent-indicator { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .agent-name { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; }
+  .agent-status { font-size: 10px; font-family: var(--mono); }
+  .agent-bar { height: 2px; background: var(--border); border-radius: 1px; margin-top: 4px; overflow: hidden; }
+  .agent-fill { height: 100%; border-radius: 1px; transition: width 1s ease; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+  /* PROGRESS BAR */
+  .progress-bar {
+    height: 3px; background: var(--border); border-radius: 2px;
+    overflow: hidden; margin-top: 12px;
+  }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--blue), var(--red));
+    border-radius: 2px; transition: width 1s ease;
+  }
+
+  .time-badge {
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    background: rgba(255,255,255,0.05); padding: 2px 7px;
+    border-radius: 4px; border: 1px solid var(--border);
+  }
+
+  .connector { width: 2px; height: 10px; background: var(--border); margin-left: 17px; }
+  .empty-state {
+    padding: 18px;
+    border: 1px dashed var(--border2);
+    border-radius: 8px;
+    color: var(--text2);
+    font-size: 12px;
+    line-height: 1.6;
+    background: rgba(255,255,255,0.02);
+  }
+  .output-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .summary-text {
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text2);
+  }
+  .auth-overlay {
+    position: fixed; inset: 0; z-index: 50;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(5,5,10,0.88);
+    backdrop-filter: blur(12px);
+    padding: 20px;
+  }
+  .auth-overlay.show { display: flex; }
+  .auth-card {
+    width: min(420px, 100%);
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 22px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.45);
+  }
+  .auth-title {
+    font-family: var(--display);
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+  .auth-sub { color: var(--text2); font-size: 12px; line-height: 1.5; margin-bottom: 18px; }
+  .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 14px; }
+  .auth-tab {
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text2);
+    border-radius: 7px;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .auth-tab.active { color: var(--text); border-color: rgba(233,69,96,0.45); background: var(--red-dim); }
+  .auth-input {
+    width: 100%;
+    border: 1px solid var(--border2);
+    background: var(--bg);
+    color: var(--text);
+    border-radius: 7px;
+    padding: 10px 11px;
+    margin-bottom: 10px;
+    font: 13px var(--body);
+    outline: none;
+  }
+  .auth-input:focus { border-color: rgba(79,142,247,0.55); }
+  .auth-message { min-height: 18px; margin-top: 10px; font-size: 11px; color: var(--text2); line-height: 1.5; }
+  .user-menu {
+    position: fixed;
+    top: 48px; right: 18px; z-index: 60;
+    width: 220px;
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 8px;
+    box-shadow: 0 18px 50px rgba(0,0,0,0.4);
+  }
+  .user-menu.show { display: block; }
+  .user-menu-row { padding: 8px; color: var(--text2); font-size: 12px; word-break: break-word; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      The Written Entity
+    </div>
+    <nav class="topbar-nav">
+      <a href="#" class="active" data-view="dashboard" onclick="setMainView('dashboard', this)">Dashboard</a>
+      <a href="#" data-view="meetings" onclick="setMainView('meetings', this)">Meetings</a>
+      <a href="#" data-view="agents" onclick="setMainView('agents', this)">Agents</a>
+      <a href="#" data-view="integrations" onclick="setMainView('integrations', this)">Integrations</a>
+      <a href="#" data-view="settings" onclick="setMainView('settings', this)">Settings</a>
+    </nav>
+    <div class="topbar-right">
+      <div class="status-pill">Checking Session</div>
+      <div class="avatar" onclick="toggleUserMenu()">--</div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Actions</div>
+      <div class="sidebar-item active" onclick="setMainView('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Overview
+      </div>
+      <div class="sidebar-item" onclick="setMainView('dashboard'); document.querySelector('.pipeline-card').scrollIntoView({behavior:'smooth', block:'center'});">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Live Pipeline
+        <span class="badge badge-blue">1</span>
+      </div>
+      <div class="sidebar-item" onclick="switchTab(document.querySelectorAll('.panel-tab')[0],'outputs')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Summaries
+        <span class="badge badge-red">3</span>
+      </div>
+      <div class="sidebar-item" onclick="switchTab(document.querySelectorAll('.panel-tab')[0],'outputs')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Tasks Created
+      </div>
+      <div class="sidebar-item" onclick="switchTab(document.querySelectorAll('.panel-tab')[0],'outputs')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Emails Sent
+      </div>
+      <div class="sidebar-item" onclick="switchTab(document.querySelectorAll('.panel-tab')[1],'agents')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Audit Log
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Integrations</div>
+      <div class="integration-list">
+        <div class="integration-item">
+          <div class="int-icon" style="background:#EA4335;color:white">G</div>
+          Gmail
+          <div class="int-dot connected"></div>
+        </div>
+        <div class="integration-item">
+          <div class="int-icon" style="background:#0F9D58;color:white">C</div>
+          Calendar
+          <div class="int-dot connected"></div>
+        </div>
+        <div class="integration-item">
+          <div class="int-icon" style="background:#4285F4;color:white">M</div>
+          Google Meet
+          <div class="int-dot connected"></div>
+        </div>
+        <div class="integration-item">
+          <div class="int-icon" style="background:#000;color:white;border:1px solid rgba(255,255,255,0.2)">N</div>
+          Notion
+          <div class="int-dot connected"></div>
+        </div>
+        <div class="integration-item">
+          <div class="int-icon" style="background:#4E67EB;color:white">D</div>
+          Google Drive
+          <div class="int-dot connected"></div>
+        </div>
+        <div class="integration-item">
+          <div class="int-icon" style="background:#1a1a2e;color:#E94560;border:1px solid rgba(233,69,96,0.3)">AI</div>
+          Gemini API
+          <div class="int-dot connected"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: auto; padding: 8px;">
+      <button class="btn btn-primary" style="width:100%; justify-content:center; font-size:12px;" onclick="openUploadTab()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Meeting
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- Metrics -->
+    <div>
+      <div class="section-header">
+        <div class="section-title">Today's Impact</div>
+        <span class="time-badge" id="live-time">--:--:--</span>
+      </div>
+      <div class="metrics">
+        <div class="metric-card red">
+          <div class="metric-label">Meetings Processed</div>
+          <div class="metric-value" id="m1">0</div>
+          <div class="metric-sub" id="m1-sub">loaded from backend</div>
+          <div class="metric-change up" id="m1-change">Live</div>
+        </div>
+        <div class="metric-card green">
+          <div class="metric-label">Time Saved</div>
+          <div class="metric-value" id="m2">0<span style="font-size:16px">m</span></div>
+          <div class="metric-sub" id="m2-sub">estimated from completed meetings</div>
+          <div class="metric-change up" id="m2-change">Live</div>
+        </div>
+        <div class="metric-card blue">
+          <div class="metric-label">Tasks Created</div>
+          <div class="metric-value" id="m3">0</div>
+          <div class="metric-sub" id="m3-sub">from Notion/local task records</div>
+          <div class="metric-change up" id="m3-change">Live</div>
+        </div>
+        <div class="metric-card purple">
+          <div class="metric-label">Emails Sent</div>
+          <div class="metric-value" id="m4">0</div>
+          <div class="metric-sub" id="m4-sub">drafted or sent by backend</div>
+          <div class="metric-change up" id="m4-change">Live</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Pipeline -->
+    <div>
+      <div class="section-header">
+        <div class="section-title">Live Pipeline</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px;" onclick="loadMeetings()">Refresh</button>
+          <button class="btn btn-primary" style="font-size:11px;padding:5px 10px;" onclick="openUploadTab()">Upload</button>
+        </div>
+      </div>
+      <div class="pipeline-card">
+        <div class="pipeline-header">
+          <div id="pipeline-dot" style="width:8px;height:8px;border-radius:50%;background:var(--text3);"></div>
+          <div class="pipeline-title">No meeting selected</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+            <span class="time-badge" id="pipeline-date">--</span>
+            <span class="time-badge" id="pipeline-time">--</span>
+            <span class="meeting-tag" id="pipeline-status">Idle</span>
+          </div>
+        </div>
+        <div class="pipeline-steps" id="pipeline-steps">
+          <!-- steps rendered by JS -->
+        </div>
+        <div style="padding:0 18px 16px;">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:6px;">
+            <span>Pipeline Progress</span>
+            <span id="progress-pct">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Meetings -->
+    <div>
+      <div class="section-header">
+        <div class="section-title">Recent Meetings</div>
+        <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;">View All</button>
+      </div>
+      <div class="meetings-list" id="meetings-list">
+        <div class="empty-state">No meetings loaded yet. Start the backend, upload a transcript/audio file, or connect Google Calendar.</div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="right-panel">
+    <div class="panel-tabs">
+      <div class="panel-tab active" onclick="switchTab(this,'outputs')">Outputs</div>
+      <div class="panel-tab" onclick="switchTab(this,'agents')">Agents</div>
+      <div class="panel-tab" onclick="switchTab(this,'upload')">Upload</div>
+    </div>
+
+    <div class="panel-content" id="tab-outputs">
+      <div class="empty-state">No outputs yet. Upload a meeting file and the backend will render summary, tasks, emails, and archive links here.</div>
+    </div>
+
+    <div class="panel-content" id="tab-agents" style="display:none;">
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-bottom:12px;letter-spacing:0.06em;">AGENT STATUS — LIVE</div>
+        <div id="agent-status-list"></div>
+      </div>
+
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;">
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:10px;letter-spacing:0.06em;">LIVE LOG</div>
+        <div id="log-container" style="display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;">
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-content" id="tab-upload" style="display:none;">
+      <div class="upload-zone" onclick="document.getElementById('meeting-file-input').click()">
+        <input id="meeting-file-input" type="file" accept=".mp3,.mp4,.wav,.m4a,.ogg,.txt,.vtt,.webm" style="display:none" onchange="handleFileSelected(event)">
+        <div class="upload-icon">🎙️</div>
+        <div class="upload-title">Drop meeting audio or transcript</div>
+        <div class="upload-sub">Supports .mp3, .mp4, .wav, .txt, .vtt</div>
+        <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+          <span style="font-size:10px;font-family:var(--mono);padding:3px 8px;background:rgba(255,255,255,0.06);border-radius:4px;color:var(--text2);">Google Meet</span>
+          <span style="font-size:10px;font-family:var(--mono);padding:3px 8px;background:rgba(255,255,255,0.06);border-radius:4px;color:var(--text2);">Zoom</span>
+          <span style="font-size:10px;font-family:var(--mono);padding:3px 8px;background:rgba(255,255,255,0.06);border-radius:4px;color:var(--text2);">Teams</span>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:10px;letter-spacing:0.06em;">OR CONNECT LIVE</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;gap:10px;font-size:12px;" onclick="signInWithGoogle()">
+            <div style="width:20px;height:20px;background:#0F9D58;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;color:white;font-weight:700;">C</div>
+            Auto-connect Google Calendar
+          </button>
+          <button class="btn btn-ghost" style="width:100%;justify-content:flex-start;gap:10px;font-size:12px;" onclick="signInWithGoogle()">
+            <div style="width:20px;height:20px;background:#4285F4;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;color:white;font-weight:700;">M</div>
+            Join Meet as Bot Agent
+          </button>
+        </div>
+      </div>
+
+      <div id="upload-feedback" style="display:none;margin-top:16px;padding:12px;background:var(--green-dim);border:1px solid rgba(34,197,94,0.2);border-radius:8px;">
+        <div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:4px;">✓ File received — pipeline starting</div>
+        <div style="font-size:11px;color:var(--text2);">Agents initializing... ETA 45 seconds</div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<div class="user-menu" id="user-menu">
+  <div class="user-menu-row" id="user-email">Not signed in</div>
+  <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-bottom:6px;" onclick="signInWithGoogle()">Connect Google</button>
+  <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="signOut()">Sign Out</button>
+</div>
+
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-card">
+    <div class="auth-title">The Written Entity</div>
+    <div class="auth-sub">Sign in to process meetings, store your pipeline runs, and connect Google/Notion automation.</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="login-tab" onclick="setAuthMode('login')">Log In</button>
+      <button class="auth-tab" id="signup-tab" onclick="setAuthMode('signup')">Sign Up</button>
+    </div>
+    <input class="auth-input" id="auth-email" type="email" autocomplete="email" placeholder="Email">
+    <input class="auth-input" id="auth-password" type="password" autocomplete="current-password" placeholder="Password">
+    <button class="btn btn-primary" id="auth-submit" style="width:100%;justify-content:center;margin-top:4px;" onclick="submitEmailAuth()">Log In</button>
+    <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px;" onclick="signInWithGoogle()">Continue with Google</button>
+    <div class="auth-message" id="auth-message"></div>
+  </div>
+</div>
+
+<script>
+const APP_CONFIG = window.WRITTEN_ENTITY_CONFIG || {};
+const BACKEND_ORIGIN = APP_CONFIG.backendOrigin || (location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:3001' : location.origin);
+const WS_URL = APP_CONFIG.wsUrl || `${BACKEND_ORIGIN.replace(/^http/, 'ws')}/ws`;
+const API_URL = `${BACKEND_ORIGIN}/api`;
+const AUTH_URL = `${BACKEND_ORIGIN}/auth`;
+const SUPABASE_URL = 'https://bcaywanbcavqeegzsglg.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjYXl3YW5iY2F2cWVlZ3pzZ2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxNTU4MDYsImV4cCI6MjA5NDczMTgwNn0.6zCuRhAG6_1X0F7e1eoW8w40p5Ru9EMWqkNAUw5bS4w';
+const GOOGLE_OAUTH_SCOPES = [
+  'https://www.googleapis.com/auth/calendar.readonly',
+  'https://www.googleapis.com/auth/gmail.send',
+  'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/meetings.space.readonly',
+].join(' ');
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+const stepTemplates = [
+  { agentName: 'orchestrator', icon: '📅', name: 'Trigger / Orchestrator', desc: 'Upload, webhook, and run coordination' },
+  { agentName: 'transcriber', icon: '🎙️', name: 'Transcriber Agent', desc: 'Gemini transcription and diarization' },
+  { agentName: 'analyzer', icon: '🧠', name: 'Analyzer Agent', desc: 'Gemini summary, decisions, and action extraction' },
+  { agentName: 'taskAgent', icon: '📋', name: 'Task Agent', desc: 'Notion task creation' },
+  { agentName: 'commsAgent', icon: '📧', name: 'Comms Agent', desc: 'Gmail follow-up drafting/sending' },
+  { agentName: 'archiver', icon: '💾', name: 'Archive Agent', desc: 'Google Drive or local archive' },
+];
+const progressByAgent = { orchestrator: 10, transcriber: 25, analyzer: 45, taskAgent: 65, commsAgent: 85, archiver: 100 };
+
+let ws;
+let activeMeetingId = null;
+let meetingsCache = [];
+let logs = [];
+let steps = freshSteps();
+let authMode = 'login';
+let currentSession = null;
+
+function freshSteps() {
+  return stepTemplates.map(step => ({ ...step, status: 'pending', time: '-' }));
+}
+
+function renderSteps() {
+  const container = document.getElementById('pipeline-steps');
+  container.innerHTML = steps.map(s => `
+    <div class="step ${s.status}">
+      <div class="step-icon">${s.status === 'running' || s.status === 'retrying' ? '<div class="spinner"></div>' : s.icon}</div>
+      <div>
+        <div class="step-name">${escapeHtml(s.name)}</div>
+        <div class="step-desc">${escapeHtml(s.desc)}</div>
+      </div>
+      <div class="step-time">${stepTimeLabel(s)}</div>
+    </div>
+  `).join('');
+  renderAgentStatus();
+}
+
+function stepTimeLabel(step) {
+  if (step.status === 'running') return 'Running';
+  if (step.status === 'retrying') return 'Retrying';
+  if (step.status === 'done') return step.time ? `Done · ${step.time}` : 'Done';
+  if (step.status === 'failed') return 'Failed';
+  return '-';
+}
+
+function renderAgentStatus() {
+  const list = document.getElementById('agent-status-list');
+  list.innerHTML = steps.map(step => {
+    const pct = step.status === 'done' ? 100 : (step.status === 'running' || step.status === 'retrying' ? 55 : 0);
+    const color = step.status === 'done' ? 'var(--green)' : step.status === 'failed' ? 'var(--red)' : step.status === 'running' || step.status === 'retrying' ? 'var(--blue)' : 'var(--text3)';
+    const pulse = step.status === 'running' || step.status === 'retrying' ? 'animation:pulse 1.5s infinite;' : '';
+    return `
+      <div class="agent-row">
+        <div class="agent-indicator" style="background:${color};${pulse}"></div>
+        <div style="flex:1;">
+          <div class="agent-name">${escapeHtml(step.name)}</div>
+          <div class="agent-bar"><div class="agent-fill" style="width:${pct}%;background:${color};"></div></div>
+        </div>
+        <div class="agent-status" style="color:${color};">${escapeHtml(stepTimeLabel(step))}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function setProgress(percent) {
+  const value = Math.max(0, Math.min(100, Number(percent) || 0));
+  document.getElementById('progress-fill').style.width = `${value}%`;
+  document.getElementById('progress-pct').textContent = `${value}%`;
+}
+
+function connectWebSocket() {
+  ws = new WebSocket(WS_URL);
+  ws.onopen = () => {
+    setConnectionStatus('Backend Connected');
+    addLog(nowTime(), 'Backend: websocket connected', 'var(--green)');
+  };
+  ws.onmessage = (event) => {
+    const msg = JSON.parse(event.data);
+    if (msg.type === 'connected') return;
+    if (msg.type === 'pipeline:step:update') updateStepUI(msg.data);
+    if (msg.type === 'pipeline:log') addLog(msg.data.timestamp, `${msg.data.agent}: ${msg.data.message}`, logColor(msg.data.level));
+    if (msg.type === 'pipeline:complete') {
+      activeMeetingId = msg.data.meetingId;
+      hydrateStepsFromRun(msg.data);
+      setProgress(100);
+      loadOutputs(msg.data.meetingId);
+      loadMeetings();
+    }
+    if (msg.type === 'pipeline:failed') {
+      addLog(nowTime(), `Pipeline failed: ${msg.data.error}`, 'var(--red)');
+      setPipelineStatus('FAILED');
+      loadMeetings();
+    }
+    if (msg.type === 'meeting:created') {
+      activeMeetingId = msg.data.meetingId;
+      resetPipelineForMeeting({ id: msg.data.meetingId, title: msg.data.title, status: 'PENDING', startTime: new Date().toISOString() });
+      loadMeetings();
+    }
+    if (msg.type === 'task:created' || msg.type === 'email:sent') {
+      loadOutputs(msg.data.meetingId);
+      loadMeetings();
+    }
+  };
+  ws.onclose = () => {
+    setConnectionStatus('Backend Reconnecting');
+    setTimeout(connectWebSocket, 3000);
+  };
+  ws.onerror = () => setConnectionStatus('Backend Offline');
+}
+
+function logColor(level) {
+  if (level === 'error') return 'var(--red)';
+  if (level === 'warn') return 'var(--amber)';
+  return 'var(--text2)';
+}
+
+function updateStepUI(data) {
+  activeMeetingId = data.meetingId;
+  const step = steps.find(item => item.agentName === data.agentName);
+  if (!step) return;
+  step.status = data.status;
+  if (data.durationMs) step.time = `${(data.durationMs / 1000).toFixed(1)}s`;
+  if (data.progressPercent) setProgress(data.progressPercent);
+  setPipelineStatus(data.status === 'failed' ? 'FAILED' : 'RUNNING');
+  renderSteps();
+}
+
+async function loadMeetings() {
+  try {
+    const res = await fetch(`${API_URL}/pipeline/meetings`, { headers: authHeaders() });
+    if (!res.ok) throw new Error('Unable to fetch meetings');
+    meetingsCache = await res.json();
+    if (!activeMeetingId && meetingsCache[0]) activeMeetingId = meetingsCache[0].id;
+    renderMeetings(meetingsCache);
+    renderMetrics(meetingsCache);
+    if (activeMeetingId) await selectMeeting(activeMeetingId, false);
+    if (!meetingsCache.length) renderEmptyPipeline();
+  } catch (err) {
+    setConnectionStatus('Backend Offline');
+    addLog(nowTime(), `Backend: ${err.message}`, 'var(--red)');
+  }
+}
+
+function renderMetrics(meetings) {
+  const tasks = meetings.reduce((sum, meeting) => sum + (meeting.tasks?.length || 0), 0);
+  const emails = meetings.reduce((sum, meeting) => sum + (meeting.emails?.length || 0), 0);
+  const completed = meetings.filter(meeting => meeting.status === 'DONE').length;
+  document.getElementById('m1').textContent = meetings.length;
+  document.getElementById('m1-sub').textContent = `${completed} completed`;
+  document.getElementById('m2').innerHTML = `${completed * 30}<span style="font-size:16px">m</span>`;
+  document.getElementById('m2-sub').textContent = 'estimated at 30 min saved per completed meeting';
+  document.getElementById('m3').textContent = tasks;
+  document.getElementById('m3-sub').textContent = `${tasks} backend task records`;
+  document.getElementById('m4').textContent = emails;
+  document.getElementById('m4-sub').textContent = `${emails} email draft/send records`;
+}
+
+function renderMeetings(meetings) {
+  const list = document.getElementById('meetings-list');
+  if (!meetings.length) {
+    list.innerHTML = '<div class="empty-state">No meetings found in the backend yet. Upload a file to create the first run.</div>';
+    return;
+  }
+  list.innerHTML = meetings.map(meeting => `
+    <div class="meeting-row ${meeting.id === activeMeetingId ? 'active' : ''}" onclick="selectMeeting('${escapeAttr(meeting.id)}')">
+      <div>
+        <div class="meeting-title">${escapeHtml(meeting.title)}</div>
+        <div class="meeting-meta">${formatDateTime(meeting.startTime)} · ${attendeeCount(meeting.attendees)} attendees</div>
+      </div>
+      <span class="meeting-tag ${meeting.status === 'DONE' ? 'tag-done' : 'tag-running'}">${escapeHtml(meeting.status)}</span>
+      <span class="meeting-count">${meeting.tasks?.length || 0} tasks</span>
+    </div>
+  `).join('');
+}
+
+async function selectMeeting(meetingId, rerenderList = true) {
+  activeMeetingId = meetingId;
+  const meeting = meetingsCache.find(item => item.id === meetingId);
+  if (meeting) resetPipelineForMeeting(meeting);
+  if (rerenderList) renderMeetings(meetingsCache);
+  await Promise.all([loadPipelineStatus(meetingId), loadOutputs(meetingId)]);
+}
+
+function resetPipelineForMeeting(meeting) {
+  document.querySelector('.pipeline-title').textContent = meeting.title || 'Untitled meeting';
+  const date = new Date(meeting.startTime || Date.now());
+  document.getElementById('pipeline-date').textContent = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  document.getElementById('pipeline-time').textContent = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  setPipelineStatus(meeting.status || 'PENDING');
+}
+
+function setPipelineStatus(status) {
+  const tag = document.getElementById('pipeline-status');
+  const dot = document.getElementById('pipeline-dot');
+  tag.textContent = status;
+  tag.className = `meeting-tag ${status === 'DONE' ? 'tag-done' : 'tag-running'}`;
+  dot.style.background = status === 'DONE' ? 'var(--green)' : status === 'FAILED' ? 'var(--red)' : 'var(--blue)';
+  dot.style.animation = status === 'DONE' || status === 'FAILED' || status === 'PENDING' ? 'none' : 'pulse 1.5s infinite';
+}
+
+function renderEmptyPipeline() {
+  document.querySelector('.pipeline-title').textContent = 'No meeting selected';
+  document.getElementById('pipeline-date').textContent = '--';
+  document.getElementById('pipeline-time').textContent = '--';
+  document.getElementById('pipeline-status').textContent = 'Idle';
+  document.getElementById('pipeline-dot').style.background = 'var(--text3)';
+  document.getElementById('pipeline-dot').style.animation = 'none';
+  steps = freshSteps();
+  setProgress(0);
+  renderSteps();
+  renderBackendOutputs(null);
+}
+
+async function loadPipelineStatus(meetingId) {
+  try {
+    const res = await fetch(`${API_URL}/pipeline/status/${meetingId}`, { headers: authHeaders() });
+    if (res.status === 404) {
+      steps = freshSteps();
+      setProgress(0);
+      renderSteps();
+      return;
+    }
+    if (!res.ok) throw new Error('Unable to fetch pipeline status');
+    const run = await res.json();
+    hydrateStepsFromRun(run);
+  } catch (err) {
+    addLog(nowTime(), `Pipeline status: ${err.message}`, 'var(--amber)');
+  }
+}
+
+function hydrateStepsFromRun(run) {
+  steps = freshSteps().map(template => {
+    const found = run.steps?.find(step => step.agentName === template.agentName);
+    if (!found) return template;
+    return {
+      ...template,
+      status: found.status.toLowerCase(),
+      time: found.durationMs ? `${(found.durationMs / 1000).toFixed(1)}s` : '',
+    };
+  });
+  const active = steps.find(step => step.status === 'running' || step.status === 'retrying') || [...steps].reverse().find(step => step.status === 'done');
+  setProgress(active ? progressByAgent[active.agentName] || 0 : 0);
+  renderSteps();
+}
+
+async function loadOutputs(meetingId) {
+  if (!meetingId) return;
+  try {
+    const res = await fetch(`${API_URL}/pipeline/outputs/${meetingId}`, { headers: authHeaders() });
+    if (!res.ok) throw new Error('No outputs yet');
+    renderBackendOutputs(await res.json());
+  } catch {
+    renderBackendOutputs(null);
+  }
+}
+
+function renderBackendOutputs(data) {
+  const outputs = document.getElementById('tab-outputs');
+  if (!data || (!data.summary && !data.analysis && !(data.tasks || []).length && !(data.emails || []).length)) {
+    outputs.innerHTML = '<div class="empty-state">No outputs for this meeting yet. The panel will update as the backend pipeline completes each agent.</div>';
+    return;
+  }
+  const analysis = data.analysis || {};
+  const tasks = data.tasks || [];
+  const emails = data.emails || [];
+  outputs.innerHTML = `
+    <div class="output-block">
+      <div class="output-label">Executive Summary</div>
+      <div class="summary-text">${escapeHtml(data.summary || analysis.summary || 'Summary pending.')}</div>
+      ${renderDecisionList(analysis.keyDecisions)}
+      ${renderRiskList(analysis.risks)}
+    </div>
+    <div class="output-block">
+      <div class="output-label">Action Items (${tasks.length})</div>
+      ${tasks.map(task => `
+        <div class="action-item">
+          <div class="action-check">✓</div>
+          <div style="flex:1;">
+            <div class="action-text">${escapeHtml(task.title)}</div>
+            <div class="action-owner">${escapeHtml(task.ownerName || task.ownerEmail || 'Unassigned')} · ${escapeHtml(task.priority || 'medium')}</div>
+          </div>
+        </div>`).join('') || '<div class="summary-text">No task records created yet.</div>'}
+    </div>
+    <div class="output-block">
+      <div class="output-label">Follow-up Emails (${emails.length})</div>
+      ${emails.map(email => `
+        <div style="padding:10px;background:var(--surface2);border-radius:6px;margin-bottom:8px;">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">To: ${escapeHtml(email.toEmail)} · ${escapeHtml(email.status)}</div>
+          <div style="font-size:11.5px;color:var(--text);">${escapeHtml(email.subject)}</div>
+        </div>`).join('') || '<div class="summary-text">No email records created yet.</div>'}
+    </div>
+    ${data.summaryDocUrl ? `<div class="output-block"><div class="output-label">Archive</div><div class="summary-text">${escapeHtml(data.summaryDocUrl)}</div></div>` : ''}
+  `;
+}
+
+function renderDecisionList(decisions = []) {
+  if (!decisions.length) return '';
+  return `<div style="margin-top:12px;"><div class="output-label">Decisions</div>${decisions.map(item => `<div class="summary-text">• ${escapeHtml(item.description)}</div>`).join('')}</div>`;
+}
+
+function renderRiskList(risks = []) {
+  if (!risks.length) return '';
+  return `<div style="margin-top:12px;"><div class="output-label">Risks</div>${risks.map(item => `<div class="summary-text">• ${escapeHtml(item)}</div>`).join('')}</div>`;
+}
+
+async function handleFileSelected(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!currentSession) {
+    showAuthGate('Please sign in before uploading a meeting.');
+    event.target.value = '';
+    return;
+  }
+  const feedback = document.getElementById('upload-feedback');
+  feedback.style.display = 'block';
+  feedback.querySelector('div:first-child').textContent = 'File received - uploading';
+  feedback.querySelector('div:last-child').textContent = 'Sending file to backend.';
+  steps = freshSteps();
+  setProgress(0);
+  renderSteps();
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('title', file.name.replace(/\.[^.]+$/, ''));
+  formData.append('attendees', '[]');
+
+  try {
+    const res = await fetch(`${API_URL}/upload`, { method: 'POST', body: formData, headers: authHeaders() });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Upload failed');
+    activeMeetingId = result.meetingId;
+    feedback.querySelector('div:first-child').textContent = 'Upload complete - pipeline starting';
+    feedback.querySelector('div:last-child').textContent = `Meeting ID: ${result.meetingId}`;
+    document.querySelectorAll('.panel-tab')[1].click();
+    await loadMeetings();
+  } catch (err) {
+    feedback.querySelector('div:first-child').textContent = 'Upload failed';
+    feedback.querySelector('div:last-child').textContent = err.message;
+    addLog(nowTime(), `Upload: ${err.message}`, 'var(--red)');
+  } finally {
+    event.target.value = '';
+  }
+}
+
+async function signInWithGoogle() {
+  const { error } = await supabaseClient.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      scopes: GOOGLE_OAUTH_SCOPES,
+      redirectTo: window.location.href.split('#')[0].split('?')[0],
+      queryParams: { access_type: 'offline', prompt: 'consent' },
+    },
+  });
+  if (error) addLog(nowTime(), `Auth: ${error.message}`, 'var(--red)');
+}
+
+async function initSupabaseAuth() {
+  const { data, error } = await supabaseClient.auth.getSession();
+  if (error) {
+    addLog(nowTime(), `Auth: ${error.message}`, 'var(--red)');
+    return;
+  }
+  currentSession = data.session;
+  updateAuthUI();
+  if (data.session) await syncSupabaseSession(data.session);
+  else showAuthGate();
+  supabaseClient.auth.onAuthStateChange(async (_event, session) => {
+    currentSession = session;
+    updateAuthUI();
+    if (session) {
+      hideAuthGate();
+      await syncSupabaseSession(session);
+      await loadMeetings();
+    } else {
+      showAuthGate();
+    }
+  });
+}
+
+async function syncSupabaseSession(session) {
+  try {
+    const res = await fetch(`${AUTH_URL}/supabase/session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        accessToken: session.access_token,
+        providerToken: session.provider_token,
+        providerRefreshToken: session.provider_refresh_token,
+        providerExpiresAt: session.expires_at,
+      }),
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Session sync failed');
+    setConnectionStatus(result.googleConnected ? 'Google Connected' : 'Signed In');
+    document.getElementById('user-email').textContent = result.user.email;
+    if (result.user?.name || result.user?.email) document.querySelector('.avatar').textContent = initialsFor(result.user.name || result.user.email);
+    addLog(nowTime(), `Auth: signed in as ${result.user.email}`, 'var(--green)');
+  } catch (err) {
+    addLog(nowTime(), `Auth: ${err.message}`, 'var(--red)');
+  }
+}
+
+function setAuthMode(mode) {
+  authMode = mode;
+  document.getElementById('login-tab').classList.toggle('active', mode === 'login');
+  document.getElementById('signup-tab').classList.toggle('active', mode === 'signup');
+  document.getElementById('auth-submit').textContent = mode === 'login' ? 'Log In' : 'Create Account';
+  document.getElementById('auth-password').setAttribute('autocomplete', mode === 'login' ? 'current-password' : 'new-password');
+  setAuthMessage('');
+}
+
+async function submitEmailAuth() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  if (!email || !password) {
+    setAuthMessage('Enter an email and password.');
+    return;
+  }
+  setAuthMessage(authMode === 'login' ? 'Signing in...' : 'Creating account...');
+  const result = authMode === 'login'
+    ? await supabaseClient.auth.signInWithPassword({ email, password })
+    : await supabaseClient.auth.signUp({ email, password, options: { emailRedirectTo: window.location.href.split('#')[0].split('?')[0] } });
+
+  if (result.error) {
+    setAuthMessage(result.error.message, true);
+    return;
+  }
+  if (authMode === 'signup' && !result.data.session) {
+    setAuthMessage('Account created. Check your email to confirm your address.');
+    return;
+  }
+  setAuthMessage('Signed in.');
+}
+
+async function signOut() {
+  await supabaseClient.auth.signOut();
+  currentSession = null;
+  meetingsCache = [];
+  activeMeetingId = null;
+  document.getElementById('user-menu').classList.remove('show');
+  renderMeetings([]);
+  renderMetrics([]);
+  renderEmptyPipeline();
+  showAuthGate();
+}
+
+function showAuthGate(message = '') {
+  document.getElementById('auth-overlay').classList.add('show');
+  if (message) setAuthMessage(message);
+  setConnectionStatus('Sign In Required');
+}
+
+function hideAuthGate() {
+  document.getElementById('auth-overlay').classList.remove('show');
+}
+
+function setAuthMessage(message, isError = false) {
+  const el = document.getElementById('auth-message');
+  el.textContent = message;
+  el.style.color = isError ? 'var(--red)' : 'var(--text2)';
+}
+
+function updateAuthUI() {
+  if (!currentSession) {
+    document.querySelector('.avatar').textContent = '--';
+    document.getElementById('user-email').textContent = 'Not signed in';
+    return;
+  }
+  const email = currentSession.user?.email || 'Signed in';
+  document.querySelector('.avatar').textContent = initialsFor(email);
+  document.getElementById('user-email').textContent = email;
+}
+
+function toggleUserMenu() {
+  document.getElementById('user-menu').classList.toggle('show');
+}
+
+function authHeaders() {
+  return currentSession?.access_token ? { Authorization: `Bearer ${currentSession.access_token}` } : {};
+}
+
+function addLog(t, msg, c) {
+  logs.push({ t, msg, c });
+  if (logs.length > 80) logs.shift();
+  renderLogs();
+}
+
+function renderLogs() {
+  const c = document.getElementById('log-container');
+  if (!logs.length) {
+    c.innerHTML = '<div class="summary-text">No live backend events yet.</div>';
+    return;
+  }
+  c.innerHTML = logs.map(l => `
+    <div style="display:flex;gap:8px;font-size:10px;font-family:var(--mono);">
+      <span style="color:var(--text3);flex-shrink:0;">${escapeHtml(l.t)}</span>
+      <span style="color:${l.c};">${escapeHtml(l.msg)}</span>
+    </div>
+  `).join('');
+  c.scrollTop = c.scrollHeight;
+}
+
+function openUploadTab() {
+  document.querySelectorAll('.panel-tab')[2].click();
+}
+
+function setMainView(view, el) {
+  document.querySelectorAll('.topbar-nav a').forEach(item => item.classList.toggle('active', item.dataset.view === view));
+  if (el) el.classList.add('active');
+  document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+  const sidebarMap = { dashboard: 0, meetings: 1, agents: 5, integrations: 0, settings: 0 };
+  const sidebar = document.querySelectorAll('.sidebar-item')[sidebarMap[view] ?? 0];
+  if (sidebar) sidebar.classList.add('active');
+
+  if (view === 'dashboard') {
+    document.querySelector('.main').scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  if (view === 'meetings') {
+    document.querySelector('#meetings-list').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  if (view === 'agents') {
+    switchTab(document.querySelectorAll('.panel-tab')[1], 'agents');
+  }
+  if (view === 'integrations') {
+    openUploadTab();
+  }
+  if (view === 'settings') {
+    toggleUserMenu();
+  }
+}
+
+function switchTab(el, id) {
+  document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  ['outputs','agents','upload'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = t === id ? 'block' : 'none';
+  });
+}
+
+function setConnectionStatus(text) {
+  document.querySelector('.status-pill').textContent = text;
+}
+
+function initialsFor(value) {
+  return String(value).split(/[\s@.]+/).filter(Boolean).slice(0, 2).map(part => part[0].toUpperCase()).join('');
+}
+
+function attendeeCount(attendees) {
+  if (Array.isArray(attendees)) return attendees.length;
+  try {
+    const parsed = JSON.parse(attendees || '[]');
+    return Array.isArray(parsed) ? parsed.length : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function formatDateTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '--';
+  return date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function nowTime() {
+  return new Date().toLocaleTimeString('en-GB', { hour12: false });
+}
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[ch]));
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value).replace(/`/g, '&#96;');
+}
+
+function updateTime() {
+  document.getElementById('live-time').textContent = nowTime();
+}
+
+renderSteps();
+renderLogs();
+renderEmptyPipeline();
+updateTime();
+setInterval(updateTime, 1000);
+initSupabaseAuth();
+connectWebSocket();
+loadMeetings();
+setInterval(loadMeetings, 15000);
+</script>
+</body>
+</html>
