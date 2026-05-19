@@ -287,7 +287,6 @@ See [.env.example](./written-entity-backend/.env.example) for complete configura
 
 ## 📚 Documentation
 
-- **[PROJECT_REPORT.md](./PROJECT_REPORT.md)** - Comprehensive technical documentation
 - **[Backend README](./written-entity-backend/README.md)** - Backend setup guide
 - **API Documentation** - Available at `/api` endpoints
 
@@ -334,15 +333,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 📧 Contact
-
-**Project Maintainer:** Your Name
-
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: your.email@example.com
-- LinkedIn: [Your Profile](https://linkedin.com/in/yourprofile)
-
----
 
 ## 🏆 Hackathon Submission
 
