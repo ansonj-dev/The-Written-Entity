@@ -9,6 +9,9 @@ WORKDIR /app
 COPY package*.json ./
 COPY .npmrc ./
 
+# Copy Prisma schema before installing dependencies
+COPY prisma ./prisma
+
 # Install dependencies with retry logic
 RUN npm ci --prefer-offline --no-audit --legacy-peer-deps || npm install --prefer-offline --no-audit
 
