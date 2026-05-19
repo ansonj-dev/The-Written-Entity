@@ -412,7 +412,6 @@ npm start
 
 ## 💬 Need Help?
 
-- Check [PROJECT_REPORT.md](./PROJECT_REPORT.md) for detailed documentation
 - Review [CONTRIBUTING.md](./CONTRIBUTING.md) for development guidelines
 - Open an issue on GitHub
 - Check existing issues for solutions
