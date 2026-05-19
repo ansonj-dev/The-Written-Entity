@@ -334,21 +334,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 
-## 🏆 Hackathon Submission
-
-This project was built for [Hackathon Name] with the goal of solving post-meeting administrative overhead using AI agents.
-
-**Category:** AI/ML, Productivity Tools  
-**Built With:** Node.js, TypeScript, Google Gemini, PostgreSQL, WebSocket  
-**Team Size:** [Your team size]  
-**Build Time:** [Duration]
-
----
-
 <div align="center">
 
 **⭐ Star this repo if you find it useful!**
 
-Made with ❤️ by [Your Team Name]
+Made with ❤️ by Redskull
 
 </div>
