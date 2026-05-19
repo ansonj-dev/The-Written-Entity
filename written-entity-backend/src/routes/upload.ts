@@ -21,25 +21,35 @@ const upload = multer({
 
 const router = Router();
 
-// Rate limiting: 3 requests per user
-const RATE_LIMIT = 3;
+// Rate limiting
+const MAX_ACCOUNTS = 10;
+const MAX_UPLOADS_PER_ACCOUNT = 3;
 
 router.post('/', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
     const user = await userFromRequest(req as any) ?? await ensureDefaultUser();
     
-    // Check rate limit
+    // Check global account limit
+    const totalAccounts = await prisma.user.count();
+    if (totalAccounts > MAX_ACCOUNTS) {
+      fs.unlinkSync(req.file.path);
+      return res.status(503).json({ 
+        error: `App has reached maximum capacity (${MAX_ACCOUNTS} accounts). This is a demo/judging limitation.`,
+        maxAccounts: MAX_ACCOUNTS,
+      });
+    }
+    
+    // Check per-account upload limit
     const meetingCount = await prisma.meeting.count({
       where: { userId: user.id },
     });
     
-    if (meetingCount >= RATE_LIMIT) {
-      // Delete uploaded file
+    if (meetingCount >= MAX_UPLOADS_PER_ACCOUNT) {
       fs.unlinkSync(req.file.path);
       return res.status(429).json({ 
-        error: `Rate limit exceeded. Maximum ${RATE_LIMIT} meetings per account.`,
-        limit: RATE_LIMIT,
+        error: `Rate limit exceeded. Maximum ${MAX_UPLOADS_PER_ACCOUNT} meetings per account.`,
+        limit: MAX_UPLOADS_PER_ACCOUNT,
         current: meetingCount,
       });
     }
@@ -61,13 +71,13 @@ router.post('/', upload.single('file'), async (req, res) => {
     await prisma.meeting.update({ where: { id: meeting.id }, data: { uploadedFilePath: finalPath } });
 
     broadcast({ type: 'meeting:created', data: { meetingId: meeting.id, title: meeting.title } });
-    broadcastLog('orchestrator', `File uploaded: ${req.file.originalname} — pipeline starting (${meetingCount + 1}/${RATE_LIMIT})`);
+    broadcastLog('orchestrator', `File uploaded: ${req.file.originalname} — pipeline starting (${meetingCount + 1}/${MAX_UPLOADS_PER_ACCOUNT})`);
     runPipeline(meeting.id).catch(console.error);
     return res.json({ 
       success: true, 
       meetingId: meeting.id, 
       message: 'Pipeline started',
-      remaining: RATE_LIMIT - meetingCount - 1,
+      remaining: MAX_UPLOADS_PER_ACCOUNT - meetingCount - 1,
     });
   } catch (err: any) {
     return res.status(500).json({ error: err.message });
@@ -81,11 +91,14 @@ router.get('/quota', async (req, res) => {
     const meetingCount = await prisma.meeting.count({
       where: { userId: user.id },
     });
+    const totalAccounts = await prisma.user.count();
     
     return res.json({
-      limit: RATE_LIMIT,
+      limit: MAX_UPLOADS_PER_ACCOUNT,
       used: meetingCount,
-      remaining: Math.max(0, RATE_LIMIT - meetingCount),
+      remaining: Math.max(0, MAX_UPLOADS_PER_ACCOUNT - meetingCount),
+      globalAccounts: totalAccounts,
+      maxAccounts: MAX_ACCOUNTS,
     });
   } catch (err: any) {
     return res.status(500).json({ error: err.message });

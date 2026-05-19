@@ -48,28 +48,4 @@ router.get('/notion', (_req, res) => {
   });
 });
 
-// Demo mode for judges/testers - no authentication required
-router.post('/demo', async (req, res) => {
-  try {
-    const demoUser = await prisma.user.upsert({
-      where: { email: 'demo@thewrittenentity.com' },
-      update: {},
-      create: {
-        email: 'demo@thewrittenentity.com',
-        name: 'Demo User',
-        supabaseId: 'demo-user-id',
-      },
-    });
-
-    return res.json({
-      success: true,
-      user: { id: demoUser.id, email: demoUser.email, name: demoUser.name },
-      googleConnected: false,
-      isDemo: true,
-    });
-  } catch (err: any) {
-    return res.status(500).json({ error: err.message });
-  }
-});
-
 export default router;
