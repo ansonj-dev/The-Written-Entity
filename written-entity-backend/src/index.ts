@@ -42,14 +42,18 @@ app.get('/health', (_req, res) => {
 const uploadDir = process.platform === 'win32' ? path.join(process.cwd(), 'uploads') : '/tmp/uploads';
 fs.mkdirSync(uploadDir, { recursive: true });
 
+// Start server immediately, initialize database in background
+server.listen(port, () => {
+  console.log(`The Written Entity backend running on http://localhost:${port}`);
+  console.log(`WebSocket available at ws://localhost:${port}/ws`);
+});
+
+// Initialize default user in background, don't block startup
 ensureDefaultUser()
   .then(() => {
-    server.listen(port, () => {
-      console.log(`The Written Entity backend running on http://localhost:${port}`);
-      console.log(`WebSocket available at ws://localhost:${port}/ws`);
-    });
+    console.log('Default user initialized');
   })
   .catch((err) => {
-    console.error('Failed to initialize backend:', err);
-    process.exit(1);
+    console.warn('Warning: Failed to initialize default user:', err.message);
+    // Don't exit - the app can still run without this
   });
