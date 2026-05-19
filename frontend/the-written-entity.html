@@ -725,7 +725,7 @@
 
 <script>
 const APP_CONFIG = window.WRITTEN_ENTITY_CONFIG || {};
-const BACKEND_ORIGIN = APP_CONFIG.backendOrigin || (location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:3001' : 'https://written-entity-backend.onrender.com');
+const BACKEND_ORIGIN = APP_CONFIG.backendOrigin || (location.hostname === 'localhost' || location.hostname === '127.0.0.1' ? 'http://localhost:3001' : 'https://the-written-entity-production.up.railway.app');
 const WS_URL = APP_CONFIG.wsUrl || `${BACKEND_ORIGIN.replace(/^http/, 'ws')}/ws`;
 const API_URL = `${BACKEND_ORIGIN}/api`;
 const AUTH_URL = `${BACKEND_ORIGIN}/auth`;
