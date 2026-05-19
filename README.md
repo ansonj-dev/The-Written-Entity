@@ -270,20 +270,6 @@ See [.env.example](./written-entity-backend/.env.example) for complete configura
 
 ---
 
-## 🎥 Demo
-
-### Screenshots
-
-**Dashboard with Live Pipeline:**
-![Dashboard](https://via.placeholder.com/800x450?text=Dashboard+Screenshot)
-
-**Real-time Agent Execution:**
-![Pipeline](https://via.placeholder.com/800x450?text=Pipeline+Screenshot)
-
-**Output Panel:**
-![Outputs](https://via.placeholder.com/800x450?text=Outputs+Screenshot)
-
----
 
 ## 📚 Documentation
 
